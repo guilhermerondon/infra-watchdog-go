@@ -1,0 +1,10 @@
+vendor/
+.env
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+backend-uptime-go
