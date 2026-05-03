@@ -63,18 +63,37 @@ func initDB() {
 }
 
 func seedMonitors() {
+	fitnessUrl := os.Getenv("URL_FITNESS_API")
+	if fitnessUrl == "" {
+		fitnessUrl = "http://localhost:8000/docs"
+	}
+	financeUrl := os.Getenv("URL_FINANCE_API")
+	if financeUrl == "" {
+		financeUrl = "http://localhost:5074/api/Transactions"
+	}
+	frontendUrl := os.Getenv("URL_FRONTEND")
+	if frontendUrl == "" {
+		frontendUrl = "http://localhost:4200"
+	}
+
 	var count int64
 	DB.Model(&Monitor{}).Count(&count)
 	
 	if count == 0 {
 		fmt.Println("🌱 Tabela de monitores vazia. Semeando dados iniciais...")
 		baseMonitors := []Monitor{
-			{Name: "Fitness API (Python)", URL: "http://localhost:8000/docs", Interval: 10, CurrentStatus: "Pending"},
-			{Name: "Finance API (.NET)", URL: "http://localhost:5074/api/Transactions", Interval: 10, CurrentStatus: "Pending"},
-			{Name: "Angular Frontend", URL: "http://localhost:4200", Interval: 10, CurrentStatus: "Pending"},
+			{Name: "Fitness API (Python)", URL: fitnessUrl, Interval: 10, CurrentStatus: "Pending"},
+			{Name: "Finance API (.NET)", URL: financeUrl, Interval: 10, CurrentStatus: "Pending"},
+			{Name: "Angular Frontend", URL: frontendUrl, Interval: 10, CurrentStatus: "Pending"},
 		}
 		DB.Create(&baseMonitors)
 		fmt.Println("✅ 3 Monitores base criados com sucesso!")
+	} else {
+		// Atualiza as URLs existentes caso as variáveis de ambiente mudem
+		DB.Model(&Monitor{}).Where("name = ?", "Fitness API (Python)").Update("url", fitnessUrl)
+		DB.Model(&Monitor{}).Where("name = ?", "Finance API (.NET)").Update("url", financeUrl)
+		DB.Model(&Monitor{}).Where("name = ?", "Angular Frontend").Update("url", frontendUrl)
+		fmt.Println("✅ URLs de monitores sincronizadas com o ambiente atual.")
 	}
 }
 
@@ -181,8 +200,8 @@ func checkMonitor(m *Monitor, wg *sync.WaitGroup) {
 	// Select aguarda a resposta do canal OU um timeout estourar
 	select {
 	case res := <-resultChan:
-		// Regra de Negócio Refinada: > 0 e < 500 significa que o servidor respondeu (ONLINE)
-		if res.err != nil || res.statusCode <= 0 || res.statusCode >= 500 {
+		// Regra de Negócio Refinada: Apenas status 200 OK significa (ONLINE)
+		if res.err != nil || res.statusCode != 200 {
 			m.CurrentStatus = "Offline"
 			DB.Save(m)
 			saveLog(m.ID, res.latency, res.statusCode)
