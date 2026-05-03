@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -36,7 +37,10 @@ type UptimeLog struct {
 
 func initDB() {
 	var err error
-	dsn := "host=localhost user=rondon_admin password=rondon_pass123 dbname=uptime_monitor_db port=5432 sslmode=disable"
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = "host=localhost user=rondon_admin password=rondon_pass123 dbname=uptime_monitor_db port=5432 sslmode=disable"
+	}
 	
 	for i := 1; i <= 5; i++ {
 		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
