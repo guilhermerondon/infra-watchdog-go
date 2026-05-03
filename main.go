@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/cors"
+	gin_cors "github.com/rs/cors/wrapper/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -88,17 +90,17 @@ func main() {
 	// Configuração do Router (Gin Framework)
 	r := gin.Default()
 	
-	// Middleware de CORS simples
-	r.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
-	})
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:4200"
+	}
+
+	// Middleware de CORS usando rs/cors
+	r.Use(gin_cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:4200", frontendURL},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"Content-Type", "Authorization"},
+	}))
 
 	// Rota para listar todos os monitores e seu status atual
 	r.GET("/api/monitors", func(c *gin.Context) {
