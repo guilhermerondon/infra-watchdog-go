@@ -43,7 +43,6 @@ func initDB() {
 		dsn = "host=localhost user=rondon_admin password=rondon_pass123 dbname=uptime_monitor_db port=5432 sslmode=disable"
 	}
 
-	// Retry logic para conexão com Postgres (Essencial para containers em nuvem)
 	for i := 1; i <= 5; i++ {
 		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err == nil {
@@ -62,7 +61,6 @@ func initDB() {
 }
 
 func seedMonitors() {
-	// Sincronizando com os nomes das variáveis do seu Railway
 	fitnessUrl := os.Getenv("URL_FITNESS_API")
 	if fitnessUrl == "" {
 		fitnessUrl = "http://localhost:8000/docs"
@@ -90,7 +88,6 @@ func seedMonitors() {
 		}
 		DB.Create(&baseMonitors)
 	} else {
-		// Garante que as URLs no banco reflitam as mudanças no ambiente
 		DB.Model(&Monitor{}).Where("name = ?", "Fitness API (Python)").Update("url", fitnessUrl)
 		DB.Model(&Monitor{}).Where("name = ?", "Finance API (.NET)").Update("url", financeUrl)
 		DB.Model(&Monitor{}).Where("name = ?", "Angular Frontend").Update("url", frontendUrl)
@@ -104,30 +101,28 @@ func main() {
 	initDB()
 	seedMonitors()
 
-	// Engine em background
 	go startCheckingEngine()
 
 	r := gin.Default()
 
-	// AJUSTE CRÍTICO: Nome da variável sincronizado com o Railway
-	frontendURL := strings.TrimRight(os.Getenv("URL_FRONTEND"), "/")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:4200"
+	// AJUSTE DE CORS: Sincronia Total (Railway + Produção Fixa)
+	frontendURLEnv := strings.TrimRight(os.Getenv("URL_FRONTEND"), "/")
+	if frontendURLEnv == "" {
+		frontendURLEnv = "http://localhost:4200"
 	}
 
-	// Middleware de CORS robusto
 	r.Use(gin_cors.New(cors.Options{
 		AllowedOrigins: []string{
 			"http://localhost:4200",
-			frontendURL,
-			frontendURL + "/",
+			"https://guilhermerondon-interface.vercel.app", // URL de produção confirmada no console
+			frontendURLEnv,
+			frontendURLEnv + "/",
 		},
-		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}))
 
-	// Endpoints da API do Watchdog
 	r.GET("/api/monitors", func(c *gin.Context) {
 		var currentMonitors []Monitor
 		DB.Find(&currentMonitors)
@@ -141,7 +136,6 @@ func main() {
 		c.JSON(http.StatusOK, history)
 	})
 
-	// Porta dinâmica do Railway
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -163,7 +157,7 @@ func startCheckingEngine() {
 		}
 
 		wg.Wait()
-		time.Sleep(15 * time.Second) // Intervalo entre ciclos
+		time.Sleep(15 * time.Second)
 	}
 }
 
@@ -192,7 +186,6 @@ func checkMonitor(m *Monitor, wg *sync.WaitGroup) {
 
 	select {
 	case res := <-resultChan:
-		// Lógica refinada: 200 OK ou 401 (Vercel Protegido) = ONLINE
 		isOnline := res.statusCode == 200 || (res.statusCode == 401 && strings.Contains(m.URL, "vercel.app"))
 
 		if res.err != nil || !isOnline {
