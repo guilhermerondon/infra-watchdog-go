@@ -91,7 +91,7 @@ func seedMonitors() {
 		DB.Model(&Monitor{}).Where("name = ?", "Fitness API (Python)").Update("url", fitnessUrl)
 		DB.Model(&Monitor{}).Where("name = ?", "Finance API (.NET)").Update("url", financeUrl)
 		DB.Model(&Monitor{}).Where("name = ?", "Angular Frontend").Update("url", frontendUrl)
-		fmt.Println("✅ URLs dos monitores sincronizadas com o Railway.")
+		fmt.Printf("✅ URLs sincronizadas: Fitness=%s, Finance=%s\n", fitnessUrl, financeUrl)
 	}
 }
 
@@ -124,6 +124,7 @@ func main() {
 	}))
 
 	r.GET("/api/monitors", func(c *gin.Context) {
+		fmt.Println("📡 Monitor Watchdog: Rota /api/monitors acessada.")
 		var currentMonitors []Monitor
 		DB.Find(&currentMonitors)
 		c.JSON(http.StatusOK, currentMonitors)
@@ -134,6 +135,10 @@ func main() {
 		var history []UptimeLog
 		DB.Where("monitor_id = ?", id).Order("timestamp desc").Limit(24).Find(&history)
 		c.JSON(http.StatusOK, history)
+	})
+	
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "Healthy", "service": "Uptime Watchdog"})
 	})
 
 	port := os.Getenv("PORT")
