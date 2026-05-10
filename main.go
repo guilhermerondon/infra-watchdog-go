@@ -98,6 +98,7 @@ func main() {
 	seedMonitors()
 
 	go startCheckingEngine()
+	go startCleanupWorker()
 
 	r := gin.Default()
 
@@ -204,6 +205,23 @@ func checkMonitor(m *Monitor, wg *sync.WaitGroup) {
 		fmt.Printf("⚠️ Monitor [%s] TIMEOUT: URL=%s (8s)\n", m.Name, m.URL)
 		DB.Save(m)
 		saveLog(m.ID, 8000, 408)
+	}
+}
+
+func startCleanupWorker() {
+	ticker := time.NewTicker(24 * time.Hour)
+	for range ticker.C {
+		fmt.Println("🧹 Iniciando limpeza de usuários Guest (Sandbox)...")
+		// Lógica: Deletar usuários 'guest_' que não possuem transações vinculadas 
+		// ou simplesmente usuários guest_ órfãos.
+		// Nota: Como não temos CreatedAt nativo no AspNetUsers sem customização, 
+		// usamos a lógica de deleção de usuários guest que não tem transações.
+		result := DB.Exec("DELETE FROM \"AspNetUsers\" WHERE \"Email\" LIKE 'guest_%'")
+		if result.Error != nil {
+			fmt.Printf("⚠️ Erro na limpeza de guests: %v\n", result.Error)
+		} else {
+			fmt.Printf("✅ Limpeza concluída: %d usuários removidos.\n", result.RowsAffected)
+		}
 	}
 }
 
