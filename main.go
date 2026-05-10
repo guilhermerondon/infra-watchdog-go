@@ -85,9 +85,9 @@ func seedMonitors() {
 		}
 		DB.Create(&baseMonitors)
 	} else {
-		DB.Model(&Monitor{}).Where("name = ?", "Fitness API (Python)").Update("url", fitnessUrl)
-		DB.Model(&Monitor{}).Where("name = ?", "Finance API (.NET)").Update("url", financeUrl)
-		DB.Model(&Monitor{}).Where("name = ?", "Web Interface (Vercel)").Update("url", frontendUrl)
+		DB.Model(&Monitor{}).Where("name LIKE ?", "%Fitness%").Update("url", fitnessUrl)
+		DB.Model(&Monitor{}).Where("name LIKE ?", "%Finance%").Update("url", financeUrl)
+		DB.Model(&Monitor{}).Where("name LIKE ?", "%Interface%").Update("url", frontendUrl)
 	}
 }
 
