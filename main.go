@@ -63,18 +63,15 @@ func initDB() {
 func seedMonitors() {
 	fitnessUrl := os.Getenv("URL_FITNESS_API")
 	if fitnessUrl == "" {
-		fitnessUrl = "http://localhost:8000/docs"
+		fitnessUrl = "https://athlete-macro-api-production.up.railway.app/health"
 	}
 
 	financeUrl := os.Getenv("URL_FINANCE_API")
 	if financeUrl == "" {
-		financeUrl = "http://localhost:5074/health"
+		financeUrl = "https://finance-core-ledger-production.up.railway.app/health"
 	}
 
-	frontendUrl := os.Getenv("URL_FRONTEND")
-	if frontendUrl == "" {
-		frontendUrl = "http://localhost:4200"
-	}
+	frontendUrl := "https://guilhermerondon-interface.vercel.app"
 
 	var count int64
 	DB.Model(&Monitor{}).Count(&count)
@@ -82,16 +79,15 @@ func seedMonitors() {
 	if count == 0 {
 		fmt.Println("🌱 Semeando dados iniciais de monitoramento...")
 		baseMonitors := []Monitor{
-			{Name: "Fitness API (Python)", URL: fitnessUrl, Interval: 10, CurrentStatus: "Pending"},
-			{Name: "Finance API (.NET)", URL: financeUrl, Interval: 10, CurrentStatus: "Pending"},
-			{Name: "Angular Frontend", URL: frontendUrl, Interval: 10, CurrentStatus: "Pending"},
+			{Name: "Fitness API (Python)", URL: fitnessUrl, Interval: 15, CurrentStatus: "Pending"},
+			{Name: "Finance API (.NET)", URL: financeUrl, Interval: 15, CurrentStatus: "Pending"},
+			{Name: "Web Interface (Vercel)", URL: frontendUrl, Interval: 15, CurrentStatus: "Pending"},
 		}
 		DB.Create(&baseMonitors)
 	} else {
 		DB.Model(&Monitor{}).Where("name = ?", "Fitness API (Python)").Update("url", fitnessUrl)
 		DB.Model(&Monitor{}).Where("name = ?", "Finance API (.NET)").Update("url", financeUrl)
-		DB.Model(&Monitor{}).Where("name = ?", "Angular Frontend").Update("url", frontendUrl)
-		fmt.Printf("✅ URLs sincronizadas: Fitness=%s, Finance=%s\n", fitnessUrl, financeUrl)
+		DB.Model(&Monitor{}).Where("name = ?", "Web Interface (Vercel)").Update("url", frontendUrl)
 	}
 }
 
