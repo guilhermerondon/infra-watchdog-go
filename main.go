@@ -191,14 +191,17 @@ func checkMonitor(m *Monitor, wg *sync.WaitGroup) {
 
 		if res.err != nil || !isOnline {
 			m.CurrentStatus = "Offline"
+			fmt.Printf("❌ Monitor [%s] OFFLINE: URL=%s, Status=%d, Err=%v\n", m.Name, m.URL, res.statusCode, res.err)
 		} else {
 			m.CurrentStatus = "Online"
+			fmt.Printf("✅ Monitor [%s] ONLINE: Latency=%dms\n", m.Name, res.latency)
 		}
 		DB.Save(m)
 		saveLog(m.ID, res.latency, res.statusCode)
 
 	case <-time.After(8 * time.Second):
 		m.CurrentStatus = "Offline"
+		fmt.Printf("⚠️ Monitor [%s] TIMEOUT: URL=%s (8s)\n", m.Name, m.URL)
 		DB.Save(m)
 		saveLog(m.ID, 8000, 408)
 	}
