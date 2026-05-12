@@ -188,13 +188,11 @@ func checkMonitor(m *Monitor, wg *sync.WaitGroup) {
 
 	select {
 	case res := <-resultChan:
-		isOnline := res.statusCode == 200 || (res.statusCode == 401 && strings.Contains(m.URL, "vercel.app"))
+		m.CurrentStatus = determineStatus(res.statusCode, res.err, m.URL)
 
-		if res.err != nil || !isOnline {
-			m.CurrentStatus = "Offline"
+		if m.CurrentStatus == "Offline" {
 			fmt.Printf("❌ Monitor [%s] OFFLINE: URL=%s, Status=%d, Err=%v\n", m.Name, m.URL, res.statusCode, res.err)
 		} else {
-			m.CurrentStatus = "Online"
 			fmt.Printf("✅ Monitor [%s] ONLINE: Latency=%dms\n", m.Name, res.latency)
 		}
 		DB.Save(m)
@@ -233,4 +231,12 @@ func saveLog(monitorID int, latency int64, statusCode int) {
 		Timestamp:  time.Now(),
 	}
 	DB.Create(&newLog)
+}
+
+func determineStatus(statusCode int, err error, url string) string {
+	isOnline := statusCode == 200 || (statusCode == 401 && strings.Contains(url, "vercel.app"))
+	if err != nil || !isOnline {
+		return "Offline"
+	}
+	return "Online"
 }
