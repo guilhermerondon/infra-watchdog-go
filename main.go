@@ -60,6 +60,7 @@ func initDB() {
 	fmt.Println("📦 Banco de dados PostgreSQL conectado e migrado com sucesso.")
 }
 
+// seedMonitors garante que os URLs dos monitores estejam sempre atualizados para o endpoint /health
 func seedMonitors() {
 	fitnessUrl := os.Getenv("URL_FITNESS_API")
 	if fitnessUrl == "" {
