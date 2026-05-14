@@ -234,7 +234,10 @@ func saveLog(monitorID int, latency int64, statusCode int) {
 }
 
 func determineStatus(statusCode int, err error, url string) string {
-	isOnline := statusCode == 200 || (statusCode == 401 && strings.Contains(url, "vercel.app"))
+	// Qualquer status code 2xx (Sucesso) é considerado Online.
+	// Mantemos 401 para Vercel como legado, mas o foco é o sucesso na rota /health.
+	isOnline := (statusCode >= 200 && statusCode < 300) || (statusCode == 401 && strings.Contains(url, "vercel.app"))
+	
 	if err != nil || !isOnline {
 		return "Offline"
 	}
