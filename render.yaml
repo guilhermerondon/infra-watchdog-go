@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: uptime-watchdog-free
+    runtime: go
+    plan: free
+    region: oregon
+    buildCommand: go build -o main .
+    startCommand: ./main
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://postgres:gui16maria22%4003@db.jduijfkxcikpwvyrvrap.supabase.co:5432/postgres
+      - key: URL_FINANCE_API
+        value: https://finance-core-ledger-free.onrender.com/health
+      - key: URL_FITNESS_API
+        value: https://fitness-api-free.onrender.com/health
+      - key: URL_FRONTEND
+        value: https://guilhermerondon-interface.vercel.app
