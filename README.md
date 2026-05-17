@@ -1,22 +1,36 @@
-# Infra Watchdog Go
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=8b5cf6&height=110&section=header&animation=fadeIn"/>
 
-Sistema de monitoramento contínuo (Uptime) focado em resiliência e concorrência, responsável por garantir que as outras APIs do ecossistema estejam sempre ativas.
+# Infrastructure Pulse / Watchdog (Go)
+
+Engine assíncrona de alta performance desenvolvida em Go, responsável pelo monitoramento contínuo, cálculo de latência e checagem de integridade (*Uptime & Health Checks*) dos microsserviços do ecossistema. O sistema opera de forma concorrente e não-bloqueante, expondo métricas em tempo real para alimentação do frontend.
+
+---
 
 ## 🚀 Tecnologias e Arquitetura
 
-- **Go (Golang)**: Linguagem compilada, focada em performance e simplicidade.
-- **Gin Framework**: Roteamento HTTP extremamente rápido.
-- **Goroutines & Canais**: Verificações concorrentes de status usando o poder do Go nativo.
-- **GORM (PostgreSQL)**: Registro histórico de latência e _status codes_.
+* **Go (Golang)**: Escolhido estrategicamente devido à sua compilação nativa, baixo consumo de memória e velocidade na execução de rotinas de I/O de rede.
+* **Gin Framework**: Roteamento HTTP de altíssima performance estruturado sobre uma árvore de caminhos de rádio (*Radix Tree*), garantindo tempo de resposta mínimo nos endpoints de telemetria.
+* **Concorrência Nativa (Goroutines & Channels)**: Pooling de monitoramento construído com rotinas leves assíncronas acionadas por um `time.Ticker`. Os resultados das requisições paralelas são orquestrados e sincronizados via canais (*Channels*) e estruturas de controle do pacote `sync`.
+* **GORM & PostgreSQL**: Abstração de persistência otimizada para o armazenamento histórico de séries temporais de latência, códigos de status HTTP e registros de oscilação de infraestrutura (*downtimes*).
 
-## 🧠 Filosofia
+---
 
-Monitoramento constante é como a consistência de um treino de 6 vezes por semana: sem falhar, sempre presente. O Watchdog trabalha nos bastidores, checando ativamente os sinais vitais do ecossistema para que a interface reflita o estado real, 24/7.
+## 🛠️ Engenharia de Monitoramento (Como Funciona)
 
-## 🛠️ Como Executar
+O motor do Watchdog consome uma lista dinâmica de endpoints (incluindo o backend em .NET Core e a API FastAPI em Python). A cada ciclo determinado, uma Goroutine dedicada é disparada para efetuar um handshake HTTP em paralelo. Se um serviço falhar ou demorar mais do que o limite estipulado (*timeout*), o motor atualiza o estado interno e emite o pulso de alerta que é captado instantaneamente no painel web.
 
+---
+
+## ⚙️ Execução Local
+
+### Pré-requisitos
+* Go v1.21+ instalado.
+* Instância do PostgreSQL ativa.
+
+### Instalação e Inicialização
 ```bash
+# Limpar e sincronizar as dependências e módulos do projeto
 go mod tidy
+
+# Compilar e rodar o servidor HTTP e o motor de pooling
 go run main.go
-```
-O serviço expõe métricas para consumo do frontend em tempo real.
