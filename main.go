@@ -72,7 +72,7 @@ func seedMonitors() {
 		financeUrl = "https://finance-core-ledger-production.up.railway.app/health"
 	}
 
-	frontendUrl := "https://guilhermerondon-interface.vercel.app"
+	frontendUrl := "https://guilhermerondon.com"
 
 	var count int64
 	DB.Model(&Monitor{}).Count(&count)
@@ -113,6 +113,8 @@ func main() {
 		AllowedOrigins: []string{
 			"http://localhost:4200",
 			"https://guilhermerondon-interface.vercel.app", // URL de produção confirmada no console
+			"https://guilhermerondon.com",
+			"https://www.guilhermerondon.com",
 			frontendURLEnv,
 			frontendURLEnv + "/",
 		},
