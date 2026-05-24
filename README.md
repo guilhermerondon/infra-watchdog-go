@@ -1,5 +1,7 @@
 <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=8b5cf6&height=110&section=header&animation=fadeIn"/>
 
+![Go CI](https://github.com/guilhermerondon/infra-watchdog-go/actions/workflows/ci-go.yml/badge.svg)
+
 # Infrastructure Pulse / Watchdog (Go)
 
 Engine assíncrona de alta performance desenvolvida em Go, responsável pelo monitoramento contínuo, cálculo de latência e checagem de integridade (*Uptime & Health Checks*) dos microsserviços do ecossistema. O sistema opera de forma concorrente e não-bloqueante, expondo métricas em tempo real para alimentação do frontend.
