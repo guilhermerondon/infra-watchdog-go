@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infra-watchdog-deployment
+spec:
+  replicas: 1 # Watchdog roda como single instance para evitar concorrência de pooling
+  selector:
+    matchLabels:
+      app: infra-watchdog
+  template:
+    metadata:
+      labels:
+        app: infra-watchdog
+    spec:
+      containers:
+      - name: infra-watchdog-service
+        image: guilhermerondon/infra-watchdog:latest
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: infra-watchdog-service
+spec:
+  type: ClusterIP
+  selector:
+    app: infra-watchdog
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
