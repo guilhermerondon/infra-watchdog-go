@@ -136,10 +136,29 @@ func main() {
 		DB.Where("monitor_id = ?", id).Order("timestamp desc").Limit(24).Find(&history)
 		c.JSON(http.StatusOK, history)
 	})
-	
+
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "Healthy", "service": "Uptime Watchdog"})
 	})
+
+	wsServer := NewWebSocketServer()
+
+	r.GET("/ws/monitor", func(c *gin.Context) {
+		wsServer.HandleConnections(c.Writer, c.Request)
+	})
+
+	// Simulação: Disparando o status para o painel a cada 5 segundos (Aqui entrará seu ping real de saúde)
+	go func() {
+		for {
+			// Depois vamos trocar isso pela checagem real do BD, Redis, etc.
+			wsServer.BroadcastStatus(map[string]interface{}{
+				"service":    "Finance API (.NET)",
+				"status":     "online",
+				"latency_ms": 42,
+			})
+			time.Sleep(5 * time.Second)
+		}
+	}()
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -213,9 +232,9 @@ func startCleanupWorker() {
 	ticker := time.NewTicker(24 * time.Hour)
 	for range ticker.C {
 		fmt.Println("🧹 Iniciando limpeza de usuários Guest (Sandbox)...")
-		// Lógica: Deletar usuários 'guest_' que não possuem transações vinculadas 
+		// Lógica: Deletar usuários 'guest_' que não possuem transações vinculadas
 		// ou simplesmente usuários guest_ órfãos.
-		// Nota: Como não temos CreatedAt nativo no AspNetUsers sem customização, 
+		// Nota: Como não temos CreatedAt nativo no AspNetUsers sem customização,
 		// usamos a lógica de deleção de usuários guest que não tem transações.
 		result := DB.Exec("DELETE FROM \"AspNetUsers\" WHERE \"Email\" LIKE 'guest_%'")
 		if result.Error != nil {
@@ -240,7 +259,7 @@ func determineStatus(statusCode int, err error, url string) string {
 	// Qualquer status code 2xx (Sucesso) é considerado Online.
 	// Mantemos 401 para Vercel como legado, mas o foco é o sucesso na rota /health.
 	isOnline := (statusCode >= 200 && statusCode < 300) || (statusCode == 401 && strings.Contains(url, "vercel.app"))
-	
+
 	if err != nil || !isOnline {
 		return "Offline"
 	}
