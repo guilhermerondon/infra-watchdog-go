@@ -147,18 +147,8 @@ func main() {
 		wsServer.HandleConnections(c.Writer, c.Request)
 	})
 
-	// Simulação: Disparando o status para o painel a cada 5 segundos (Aqui entrará seu ping real de saúde)
-	go func() {
-		for {
-			// Depois vamos trocar isso pela checagem real do BD, Redis, etc.
-			wsServer.BroadcastStatus(map[string]interface{}{
-				"service":    "Finance API (.NET)",
-				"status":     "online",
-				"latency_ms": 42,
-			})
-			time.Sleep(5 * time.Second)
-		}
-	}()
+	// Inicia o motor de Health Checks ativos rodando em paralelo
+	go StartHealthChecks(wsServer)
 
 	port := os.Getenv("PORT")
 	if port == "" {
