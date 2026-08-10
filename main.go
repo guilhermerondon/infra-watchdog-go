@@ -100,6 +100,7 @@ func main() {
 
 	go startCheckingEngine()
 	go startCleanupWorker()
+	go startSupabasePingWorker()
 
 	r := gin.Default()
 
@@ -254,4 +255,27 @@ func determineStatus(statusCode int, err error, url string) string {
 		return "Offline"
 	}
 	return "Online"
+}
+
+func startSupabasePingWorker() {
+	fmt.Println("⏱️ Iniciando worker de ping para prevenção de hibernação no Supabase (48h)...")
+	ticker := time.NewTicker(48 * time.Hour)
+	
+	// Executa o ping uma vez ao iniciar
+	pingSupabase()
+	
+	for range ticker.C {
+		pingSupabase()
+	}
+}
+
+func pingSupabase() {
+	fmt.Println("📡 Executando ping no Supabase (SELECT 1)...")
+	var result int
+	err := DB.Raw("SELECT 1").Scan(&result).Error
+	if err != nil {
+		fmt.Printf("⚠️ Erro ao realizar ping no Supabase: %v\n", err)
+	} else {
+		fmt.Printf("✅ Ping no Supabase realizado com sucesso! Resultado: %d\n", result)
+	}
 }
